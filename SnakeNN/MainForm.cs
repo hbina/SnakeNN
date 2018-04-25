@@ -12,16 +12,13 @@ namespace SnakeNN
 {
     public partial class MainForm : Form
     {
-        private List<Circle> Snake = new List<Circle>();
-        private Circle food = new Circle();
-        public MainForm()
+        private SnakeSettings snakeSettings;
+        public MainForm(int gameSizeX, int gameSizeY, int gameSpeed, int gamePoint)
         {
             InitializeComponent();
-
-            new SnakeSettings();
-
-            gameTimer.Interval = 1000 / SnakeSettings.Speed;
-            gameTimer.Tick += UpdateScreen;
+            snakeSettings = new SnakeSettings(gameSizeX, gameSizeY, gameSpeed, gamePoint);
+            gameTimer.Interval = 1000 / snakeSettings.speed;
+            gameTimer.Tick += UpdateScreen; //wtf is this?
             gameTimer.Start();
 
             StartGame();
@@ -29,14 +26,13 @@ namespace SnakeNN
 
         private void StartGame()
         {
-            new SnakeSettings();
-            Snake.Clear(); // clear the List
+            snakeSettings.Clear();
             Circle head = new Circle();
-            head.X = 10;
-            head.Y = 5;
-            Snake.Add(head);
+            head.X = snakeSettings.width / 2;
+            head.Y = snakeSettings.height / 2;
+            snakeSettings.Snake.Add(head);
 
-            lblScore.Text = SnakeSettings.Score.ToString();
+            lblScore.Text = snakeSettings.score.ToString();
             lblGameOver.Visible = false;
             GenerateFood();
         }
@@ -44,19 +40,16 @@ namespace SnakeNN
         // Generate random food
         private void GenerateFood()
         {
-            int maxXPos = pbCanvas.Size.Width / SnakeSettings.Width;
-            int maxYPos = pbCanvas.Size.Height / SnakeSettings.Height;
-
             Random random = new Random();
-            food = new Circle();
-            food.X = random.Next(0, maxXPos);
-            food.Y = random.Next(0, maxYPos);
+            snakeSettings.food = new Circle();
+            snakeSettings.food.X = random.Next(0, snakeSettings.width);
+            snakeSettings.food.Y = random.Next(0, snakeSettings.height);
         }
 
         private void UpdateScreen(object sender, EventArgs e)
         {
             //Check for Game Over
-            if (SnakeSettings.GameOver)
+            if (snakeSettings.gameOver)
             {
                 //Check if Enter is pressed
                 if (SnakeInput.KeyPressed(Keys.Enter))
@@ -66,14 +59,14 @@ namespace SnakeNN
             }
             else
             {
-                if (SnakeInput.KeyPressed(Keys.Right) && SnakeSettings.direction != Direction.Left)
-                    SnakeSettings.direction = Direction.Right;
-                else if (SnakeInput.KeyPressed(Keys.Left) && SnakeSettings.direction != Direction.Right)
-                    SnakeSettings.direction = Direction.Left;
-                else if (SnakeInput.KeyPressed(Keys.Up) && SnakeSettings.direction != Direction.Down)
-                    SnakeSettings.direction = Direction.Up;
-                else if (SnakeInput.KeyPressed(Keys.Down) && SnakeSettings.direction != Direction.Up)
-                    SnakeSettings.direction = Direction.Down;
+                if (SnakeInput.KeyPressed(Keys.Right) && snakeSettings.direction != Direction.Left)
+                    snakeSettings.direction = Direction.Right;
+                else if (SnakeInput.KeyPressed(Keys.Left) && snakeSettings.direction != Direction.Right)
+                    snakeSettings.direction = Direction.Left;
+                else if (SnakeInput.KeyPressed(Keys.Up) && snakeSettings.direction != Direction.Down)
+                    snakeSettings.direction = Direction.Up;
+                else if (SnakeInput.KeyPressed(Keys.Down) && snakeSettings.direction != Direction.Up)
+                    snakeSettings.direction = Direction.Down;
 
                 MovePlayer();
             }
@@ -84,52 +77,52 @@ namespace SnakeNN
 
         private void MovePlayer()
         {
-            for (int i = Snake.Count - 1; i >= 0; i--)
+            for (int i = snakeSettings.Snake.Count - 1; i >= 0; i--)
             {
                 //Move head
                 if (i == 0)
                 {
-                    switch (SnakeSettings.direction)
+                    switch (snakeSettings.direction)
                     {
                         case Direction.Right:
-                            Snake[i].X++;
+                            snakeSettings.Snake[i].X++;
                             break;
                         case Direction.Left:
-                            Snake[i].X--;
+                            snakeSettings.Snake[i].X--;
                             break;
                         case Direction.Up:
-                            Snake[i].Y--;
+                            snakeSettings.Snake[i].Y--;
                             break;
                         case Direction.Down:
-                            Snake[i].Y++;
+                            snakeSettings.Snake[i].Y++;
                             break;
                     }
 
 
                     //Get maximum X and Y Pos
-                    int maxXPos = pbCanvas.Size.Width / SnakeSettings.Width;
-                    int maxYPos = pbCanvas.Size.Height / SnakeSettings.Height;
+                    int maxXPos = snakeSettings.width;
+                    int maxYPos = snakeSettings.height;
 
                     //Detect collission with game borders.
-                    if (Snake[i].X < 0 || Snake[i].Y < 0
-                        || Snake[i].X >= maxXPos || Snake[i].Y >= maxYPos)
+                    if (snakeSettings.Snake[i].X < 0 || snakeSettings.Snake[i].Y < 0
+                        || snakeSettings.Snake[i].X >= maxXPos || snakeSettings.Snake[i].Y >= maxYPos)
                     {
                         Die();
                     }
 
 
                     //Detect collission with body
-                    for (int j = 1; j < Snake.Count; j++)
+                    for (int j = 1; j < snakeSettings.Snake.Count; j++)
                     {
-                        if (Snake[i].X == Snake[j].X &&
-                           Snake[i].Y == Snake[j].Y)
+                        if (snakeSettings.Snake[i].X == snakeSettings.Snake[j].X &&
+                           snakeSettings.Snake[i].Y == snakeSettings.Snake[j].Y)
                         {
                             Die();
                         }
                     }
 
                     //Detect collision with food piece
-                    if (Snake[0].X == food.X && Snake[0].Y == food.Y)
+                    if (snakeSettings.Snake[0].X == snakeSettings.food.X && snakeSettings.Snake[0].Y == snakeSettings.food.Y)
                     {
                         Eat();
                     }
@@ -138,8 +131,8 @@ namespace SnakeNN
                 else
                 {
                     //Move body
-                    Snake[i].X = Snake[i - 1].X;
-                    Snake[i].Y = Snake[i - 1].Y;
+                    snakeSettings.Snake[i].X = snakeSettings.Snake[i - 1].X;
+                    snakeSettings.Snake[i].Y = snakeSettings.Snake[i - 1].Y;
                 }
             }
         }
@@ -159,33 +152,36 @@ namespace SnakeNN
             //Add circle to body
             Circle circle = new Circle
             {
-                X = Snake[Snake.Count - 1].X,
-                Y = Snake[Snake.Count - 1].Y
+                X = snakeSettings.Snake[snakeSettings.Snake.Count - 1].X,
+                Y = snakeSettings.Snake[snakeSettings.Snake.Count - 1].Y
             };
-            Snake.Add(circle);
+            snakeSettings.Snake.Add(circle);
 
             //Update Score
-            SnakeSettings.Score += SnakeSettings.Points;
-            lblScore.Text = SnakeSettings.Score.ToString();
+            snakeSettings.score += snakeSettings.points;
+            lblScore.Text = snakeSettings.score.ToString();
 
             GenerateFood();
         }
 
         private void Die()
         {
-            SnakeSettings.GameOver = true;
+            Console.WriteLine("snek ded :(");
+            snakeSettings.gameOver = true;
         }
 
         private void pbCanvas_Paint(object sender, PaintEventArgs e)
         {
             Graphics canvas = e.Graphics;
 
-            if (!SnakeSettings.GameOver)
+            int ellipseSizeX = (pbCanvas.Width / snakeSettings.width);
+            int ellipseSizeY = (pbCanvas.Height / snakeSettings.height);
+            if (!snakeSettings.gameOver)
             {
-                //Set colour of snake
+                //Set colour of snakeSettings.Snake
 
-                //Draw snake
-                for (int i = 0; i < Snake.Count; i++)
+                //Draw snakeSettings.Snake
+                for (int i = 0; i < snakeSettings.Snake.Count; i++)
                 {
                     Brush snakeColour;
                     if (i == 0)
@@ -193,25 +189,22 @@ namespace SnakeNN
                     else
                         snakeColour = Brushes.Green;    //Rest of body
 
-                    //Draw snake
+                    //Draw Snake
                     canvas.FillEllipse(snakeColour,
-                        new Rectangle(Snake[i].X * SnakeSettings.Width,
-                                      Snake[i].Y * SnakeSettings.Height,
-                                      SnakeSettings.Width, SnakeSettings.Height));
-
-
-                    //Draw Food
-                    canvas.FillEllipse(Brushes.Red,
-                        new Rectangle(food.X * SnakeSettings.Width,
-                             food.Y * SnakeSettings.Height, SnakeSettings.Width, SnakeSettings.Height));
-
+                        new Rectangle(snakeSettings.Snake[i].X * ellipseSizeX,
+                                      snakeSettings.Snake[i].Y * ellipseSizeY,
+                                      ellipseSizeX, ellipseSizeY));
                 }
+                //Draw Food
+                canvas.FillEllipse(Brushes.Red,
+                  new Rectangle(snakeSettings.food.X * ellipseSizeX,
+                     snakeSettings.food.Y * ellipseSizeY, ellipseSizeX, ellipseSizeY));
             }
             else
             {
-                string gameOver = "Game over \nYour final score is: " + SnakeSettings.Score + "\nPress Enter to try again";
+                string gameOver = "Game over \nYour final score is: " + snakeSettings.score + "\nPress Enter to try again";
                 lblGameOver.Text = gameOver;
-                lblGameOver.Visible = true;
+                //lblGameOver.Visible = true;
             }
         }
     }

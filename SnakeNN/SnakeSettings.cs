@@ -1,4 +1,7 @@
-﻿namespace SnakeNN
+﻿using System;
+using System.Collections.Generic;
+
+namespace SnakeNN
 {
     public enum Direction
     {
@@ -10,23 +13,36 @@
 
     public class SnakeSettings
     {
-        public static int Width { get; set; }
-        public static int Height { get; set; }
-        public static int Speed { get; set; }
-        public static int Score { get; set; }
-        public static int Points { get; set; }
-        public static bool GameOver { get; set; }
-        public static Direction direction { get; set; }
+        public readonly int width;
+        public readonly int height;
+        public readonly int speed;
+        public readonly int points;
 
-        public SnakeSettings()
+        public int score;
+        public bool gameOver;
+        public Direction direction;
+
+        private int[,] snakeCartesian;
+        public List<Circle> Snake = new List<Circle>();
+        public Circle food = new Circle();
+
+        public SnakeSettings(int givenWidth, int givenHeight, int givenSpeed, int givenPoint)
         {
-            Width = 16;
-            Height = 16;
-            Speed = 16;
-            Score = 0;
-            Points = 100;
-            GameOver = false;
+            width = givenWidth;
+            height = givenHeight;
+            speed = givenSpeed;
+            points = givenPoint;
+
+            Clear();
+        }
+
+        public void Clear()
+        {
+            score = 0;
+            gameOver = false;
             direction = Direction.Down;
+            snakeCartesian = new int[width, height];
+            Snake.Clear(); // clear the List
         }
     }
 
