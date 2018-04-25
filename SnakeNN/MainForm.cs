@@ -133,6 +133,7 @@ namespace SnakeNN
                     //Move body
                     snakeSettings.Snake[i].X = snakeSettings.Snake[i - 1].X;
                     snakeSettings.Snake[i].Y = snakeSettings.Snake[i - 1].Y;
+                    int hello;
                 }
             }
         }
