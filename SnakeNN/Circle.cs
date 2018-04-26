@@ -1,15 +1,14 @@
-﻿namespace SnakeNN
+﻿public class Circle
 {
-    public class Circle
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
+    public int x { get; set; }
+    public int y { get; set; }
+    public CartesianStates type { get; set; }
 
-        public Circle ()
-        {
-            X = 0;
-            Y = 0;
-        }
+    public Circle(int givenX, int givenY, CartesianStates givenType)
+    {
+        x = givenX;
+        y = givenY;
+        type = givenType;
     }
 }
 
