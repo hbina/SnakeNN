@@ -1,4 +1,7 @@
-﻿public class SnakeCartesian
+﻿using System;
+using System.Collections.Generic;
+
+public class SnakeCartesian
 {
     public CartesianStates[,] snakeCartesian;
     public SnakeCartesian(int gameGridX, int gameGridY)

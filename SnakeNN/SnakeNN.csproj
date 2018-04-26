@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SnakeCartesian.cs" />
     <Compile Include="SnakeInput.cs" />
     <Compile Include="SnakeSettings.cs" />
     <EmbeddedResource Include="MainForm.resx">
