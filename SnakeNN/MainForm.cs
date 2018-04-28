@@ -94,5 +94,10 @@ namespace SnakeNN
                 lblGameOver.Visible = snakeSettings.isGameOver;
             }
         }
+
+        private void TEXT_SCORE_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

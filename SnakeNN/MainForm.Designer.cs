@@ -42,7 +42,7 @@
             this.pbCanvas.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.pbCanvas.Location = new System.Drawing.Point(12, 12);
             this.pbCanvas.Name = "pbCanvas";
-            this.pbCanvas.Size = new System.Drawing.Size(574, 426);
+            this.pbCanvas.Size = new System.Drawing.Size(670, 506);
             this.pbCanvas.TabIndex = 0;
             this.pbCanvas.TabStop = false;
             this.pbCanvas.Paint += new System.Windows.Forms.PaintEventHandler(this.pbCanvas_Paint);
@@ -51,17 +51,18 @@
             // 
             this.TEXT_SCORE.AutoSize = true;
             this.TEXT_SCORE.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TEXT_SCORE.Location = new System.Drawing.Point(592, 12);
+            this.TEXT_SCORE.Location = new System.Drawing.Point(688, 12);
             this.TEXT_SCORE.Name = "TEXT_SCORE";
             this.TEXT_SCORE.Size = new System.Drawing.Size(119, 31);
             this.TEXT_SCORE.TabIndex = 2;
             this.TEXT_SCORE.Text = "SCORE:";
+            this.TEXT_SCORE.Click += new System.EventHandler(this.TEXT_SCORE_Click);
             // 
             // lblScore
             // 
             this.lblScore.AutoSize = true;
             this.lblScore.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblScore.Location = new System.Drawing.Point(592, 51);
+            this.lblScore.Location = new System.Drawing.Point(688, 51);
             this.lblScore.Name = "lblScore";
             this.lblScore.Size = new System.Drawing.Size(167, 25);
             this.lblScore.TabIndex = 3;
@@ -82,7 +83,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(972, 576);
             this.Controls.Add(this.lblGameOver);
             this.Controls.Add(this.lblScore);
             this.Controls.Add(this.TEXT_SCORE);

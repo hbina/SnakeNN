@@ -16,7 +16,8 @@ public enum CartesianStates
     IS_EMPTY,
     IS_SNAKE,
     IS_FOOD,
-    IS_LIGHT
+    IS_LIGHT,
+    IS_WALL
 };
 
 public class SnakeSettings
@@ -88,8 +89,7 @@ public class SnakeSettings
                 break;
         }
 
-        if (snakeBody.x < 0 || snakeBody.y < 0 ||
-            snakeBody.x >= gameGridX || snakeBody.y >= gameGridY)
+        if (snakeCartesian.GetWorld()[snakeBody.x, snakeBody.y].Equals(CartesianStates.IS_WALL))
         {
             Die();
         }
@@ -131,6 +131,10 @@ public class SnakeSettings
         else if (givenCartesianState.Equals(CartesianStates.IS_LIGHT))
         {
             return Brushes.White;
+        }
+        else if (givenCartesianState.Equals(CartesianStates.IS_WALL))
+        {
+            return Brushes.Black;
         }
         else
         {

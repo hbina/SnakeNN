@@ -10,20 +10,28 @@ public class SnakeCartesian
         ClearWorld();
     }
 
-    public void clearWorld(CartesianStates givenStates)
+    public void ClearWorld(CartesianStates givenStates)
     {
         for (int iterateX = 0; iterateX < snakeCartesian.GetLength(0); iterateX++)
         {
             for (int iterateY = 0; iterateY < snakeCartesian.GetLength(1); iterateY++)
             {
-                snakeCartesian[iterateX, iterateY] = givenStates;
+                if (iterateX.Equals(0) || iterateX.Equals(snakeCartesian.GetLength(1) - 1) ||
+                    iterateY.Equals(0) || iterateY.Equals(snakeCartesian.GetLength(0) - 1))
+                {
+                    snakeCartesian[iterateX, iterateY] = CartesianStates.IS_WALL;
+                }
+                else
+                {
+                    snakeCartesian[iterateX, iterateY] = givenStates;
+                }
             }
         }
     }
 
     public void ClearWorld()
     {
-        clearWorld(CartesianStates.IS_EMPTY);
+        ClearWorld(CartesianStates.IS_EMPTY);
     }
 
     public void UpdateCartesian(List<Circle> givenWorldObjects)
