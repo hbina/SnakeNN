@@ -11,7 +11,7 @@ public enum SnakeDirection
     NULL
 };
 
-public enum CartesianStates
+public enum WorldStates
 {
     IS_EMPTY,
     IS_SNAKE,
@@ -20,7 +20,7 @@ public enum CartesianStates
     IS_WALL
 };
 
-public class SnakeSettings
+public class WorldController
 {
 
     public readonly int gameGridX;
@@ -32,13 +32,17 @@ public class SnakeSettings
     public bool isGameOver;
     public SnakeDirection headDirection;
 
-    public SnakeCartesian snakeCartesian;
-    public Circle snakeBody;
-    public Circle food;
-    public List<Circle> snakeVision;
+    public WorldGrid worldGrid;
+    public WorldObject self;
+    public WorldObject target;
+    public List<WorldObject> selfVision;
 
-    public SnakeSettings(int givenGridX, int givenGridY, int givenSpeed, int givenEatPoints)
+    private Random random;
+    private readonly int RANDOM_NUMBER = 181983123;
+
+    public WorldController(int givenGridX, int givenGridY, int givenSpeed, int givenEatPoints)
     {
+        random = new Random(RANDOM_NUMBER);
         gameGridX = givenGridX;
         gameGridY = givenGridY;
         gameSpeed = givenSpeed;
@@ -51,18 +55,26 @@ public class SnakeSettings
         currentScore = 0;
         isGameOver = false;
         headDirection = SnakeDirection.UP;
-        snakeCartesian = new SnakeCartesian(gameGridX, gameGridY);
-        snakeBody = new Circle(gameGridX / 2, gameGridY / 2, CartesianStates.IS_SNAKE);
-        food = new Circle(0, 0, CartesianStates.IS_FOOD);
-        snakeVision = new List<Circle>();
+        worldGrid = new WorldGrid(gameGridX, gameGridY);
+        self = new WorldObject(gameGridX / 2, gameGridY / 2, WorldStates.IS_SNAKE);
+        target = new WorldObject(0, 0, WorldStates.IS_FOOD);
+        selfVision = new List<WorldObject>();
         GenerateFood();
     }
 
     public void GenerateFood()
     {
-        Random random = new Random();
-        food.x = random.Next(0, gameGridX);
-        food.y = random.Next(0, gameGridY);
+        int x = random.Next(1, gameGridX);
+        int y = random.Next(1, gameGridY);
+        Console.WriteLine($"food({x}, {y})");
+        if (worldGrid.GetWorld()[x, y].Equals(WorldStates.IS_EMPTY))
+        {
+            target = new WorldObject(x, y, WorldStates.IS_FOOD);
+        }
+        else
+        {
+            GenerateFood();
+        }
     }
 
     public void Eat()
@@ -76,37 +88,37 @@ public class SnakeSettings
         switch (headDirection)
         {
             case SnakeDirection.RIGHT:
-                snakeBody.x++;
+                self.x++;
                 break;
             case SnakeDirection.LEFT:
-                snakeBody.x--;
+                self.x--;
                 break;
             case SnakeDirection.UP:
-                snakeBody.y--;
+                self.y--;
                 break;
             case SnakeDirection.DOWN:
-                snakeBody.y++;
+                self.y++;
                 break;
         }
 
-        if (snakeCartesian.GetWorld()[snakeBody.x, snakeBody.y].Equals(CartesianStates.IS_WALL))
+        if (worldGrid.GetWorld()[self.x, self.y].Equals(WorldStates.IS_WALL))
         {
             Die();
         }
-        else if (snakeCartesian.GetWorld()[snakeBody.x, snakeBody.y].Equals(CartesianStates.IS_FOOD))
+        else if (worldGrid.GetWorld()[self.x, self.y].Equals(WorldStates.IS_FOOD))
         {
             Eat();
         }
 
         //UpdateVision();
-        List<Circle> worldObjects = new List<Circle>();
-        worldObjects.Add(snakeBody);
-        worldObjects.Add(food);
-        foreach (Circle circle in snakeVision)
+        List<WorldObject> worldObjects = new List<WorldObject>();
+        worldObjects.Add(self);
+        worldObjects.Add(target);
+        foreach (WorldObject circle in selfVision)
         {
             worldObjects.Add(circle);
         }
-        snakeCartesian.UpdateCartesian(worldObjects);
+        worldGrid.UpdateCartesian(worldObjects);
     }
 
     private void Die()
@@ -114,25 +126,25 @@ public class SnakeSettings
         isGameOver = true;
     }
 
-    public Brush GetColorOfObject(CartesianStates givenCartesianState)
+    public Brush GetColorOfObject(WorldStates givenCartesianState)
     {
-        if (givenCartesianState.Equals(CartesianStates.IS_EMPTY))
+        if (givenCartesianState.Equals(WorldStates.IS_EMPTY))
         {
             return Brushes.Pink;
         }
-        else if (givenCartesianState.Equals(CartesianStates.IS_SNAKE))
+        else if (givenCartesianState.Equals(WorldStates.IS_SNAKE))
         {
             return Brushes.Blue;
         }
-        else if (givenCartesianState.Equals(CartesianStates.IS_FOOD))
+        else if (givenCartesianState.Equals(WorldStates.IS_FOOD))
         {
             return Brushes.Green;
         }
-        else if (givenCartesianState.Equals(CartesianStates.IS_LIGHT))
+        else if (givenCartesianState.Equals(WorldStates.IS_LIGHT))
         {
             return Brushes.White;
         }
-        else if (givenCartesianState.Equals(CartesianStates.IS_WALL))
+        else if (givenCartesianState.Equals(WorldStates.IS_WALL))
         {
             return Brushes.Black;
         }
@@ -144,25 +156,25 @@ public class SnakeSettings
 
     public void UpdateVision()
     {
-        snakeVision = new List<Circle>();
-        int[] lightPosition = new int[] { snakeBody.x, snakeBody.y };
+        selfVision = new List<WorldObject>();
+        int[] lightPosition = new int[] { self.x, self.y };
         if (headDirection.Equals(SnakeDirection.UP))
         {
             int counter = 0;
             while (lightPosition[1] >= 0)
             {
-                snakeVision.Add(new Circle(lightPosition[0], lightPosition[1], CartesianStates.IS_LIGHT));
+                selfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldStates.IS_LIGHT));
                 for (int sideLength = 0; sideLength < counter; sideLength++)
                 {
                     int checkedLeft = lightPosition[0] - sideLength;
                     int checkedRight = lightPosition[0] + sideLength;
                     if (checkedLeft >= 0)
                     {
-                        snakeVision.Add(new Circle(checkedLeft, lightPosition[1], CartesianStates.IS_LIGHT));
+                        selfVision.Add(new WorldObject(checkedLeft, lightPosition[1], WorldStates.IS_LIGHT));
                     }
-                    if (checkedRight < snakeCartesian.GetWorld().GetLength(0))
+                    if (checkedRight < worldGrid.GetWorld().GetLength(0))
                     {
-                        snakeVision.Add(new Circle(checkedRight, lightPosition[1], CartesianStates.IS_LIGHT));
+                        selfVision.Add(new WorldObject(checkedRight, lightPosition[1], WorldStates.IS_LIGHT));
                     }
                 }
                 lightPosition[1]--;
@@ -172,20 +184,20 @@ public class SnakeSettings
         else if (headDirection.Equals(SnakeDirection.DOWN))
         {
             int counter = 0;
-            while (lightPosition[1] < snakeCartesian.GetWorld().GetLength(1))
+            while (lightPosition[1] < worldGrid.GetWorld().GetLength(1))
             {
-                snakeVision.Add(new Circle(lightPosition[0], lightPosition[1], CartesianStates.IS_LIGHT));
+                selfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldStates.IS_LIGHT));
                 for (int sideLength = 0; sideLength < counter; sideLength++)
                 {
                     int checkedLeft = lightPosition[0] - sideLength;
                     int checkedRight = lightPosition[0] + sideLength;
                     if (checkedLeft >= 0)
                     {
-                        snakeVision.Add(new Circle(checkedLeft, lightPosition[1], CartesianStates.IS_LIGHT));
+                        selfVision.Add(new WorldObject(checkedLeft, lightPosition[1], WorldStates.IS_LIGHT));
                     }
-                    if (checkedRight < snakeCartesian.GetWorld().GetLength(0))
+                    if (checkedRight < worldGrid.GetWorld().GetLength(0))
                     {
-                        snakeVision.Add(new Circle(checkedRight, lightPosition[1], CartesianStates.IS_LIGHT));
+                        selfVision.Add(new WorldObject(checkedRight, lightPosition[1], WorldStates.IS_LIGHT));
                     }
                 }
                 lightPosition[1]++;
@@ -197,18 +209,18 @@ public class SnakeSettings
             int counter = 0;
             while (lightPosition[0] >= 0)
             {
-                snakeVision.Add(new Circle(lightPosition[0], lightPosition[1], CartesianStates.IS_LIGHT));
+                selfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldStates.IS_LIGHT));
                 for (int sideLength = 0; sideLength < counter; sideLength++)
                 {
                     int checkedUp = lightPosition[1] - sideLength;
                     int checkDown = lightPosition[1] + sideLength;
                     if (checkedUp >= 0)
                     {
-                        snakeVision.Add(new Circle(checkedUp, lightPosition[1], CartesianStates.IS_LIGHT));
+                        selfVision.Add(new WorldObject(checkedUp, lightPosition[1], WorldStates.IS_LIGHT));
                     }
-                    if (checkDown < snakeCartesian.GetWorld().GetLength(1))
+                    if (checkDown < worldGrid.GetWorld().GetLength(1))
                     {
-                        snakeVision.Add(new Circle(checkDown, lightPosition[1], CartesianStates.IS_LIGHT));
+                        selfVision.Add(new WorldObject(checkDown, lightPosition[1], WorldStates.IS_LIGHT));
                     }
                 }
                 lightPosition[1]--;
@@ -218,20 +230,20 @@ public class SnakeSettings
         else
         {
             int counter = 0;
-            while (lightPosition[1] < snakeCartesian.GetWorld().GetLength(0))
+            while (lightPosition[1] < worldGrid.GetWorld().GetLength(0))
             {
-                snakeVision.Add(new Circle(lightPosition[0], lightPosition[1], CartesianStates.IS_LIGHT));
+                selfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldStates.IS_LIGHT));
                 for (int sideLength = 0; sideLength < counter; sideLength++)
                 {
                     int checkedUp = lightPosition[0] - sideLength;
                     int checkedDown = lightPosition[0] + sideLength;
                     if (checkedUp >= 0)
                     {
-                        snakeVision.Add(new Circle(checkedUp, lightPosition[1], CartesianStates.IS_LIGHT));
+                        selfVision.Add(new WorldObject(checkedUp, lightPosition[1], WorldStates.IS_LIGHT));
                     }
-                    if (checkedDown < snakeCartesian.GetWorld().GetLength(1))
+                    if (checkedDown < worldGrid.GetWorld().GetLength(1))
                     {
-                        snakeVision.Add(new Circle(checkedDown, lightPosition[1], CartesianStates.IS_LIGHT));
+                        selfVision.Add(new WorldObject(checkedDown, lightPosition[1], WorldStates.IS_LIGHT));
                     }
                 }
                 lightPosition[1]--;

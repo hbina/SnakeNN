@@ -12,36 +12,36 @@ namespace SnakeNN
 {
     public partial class MainForm : Form
     {
-        private SnakeSettings snakeSettings;
+        private SelfBrain selfBrain;
+        private WorldController worldController;
+
         public MainForm(int gameSizeX, int gameSizeY, int gameSpeed, int gamePoint)
         {
             InitializeComponent();
-            snakeSettings = new SnakeSettings(gameSizeX, gameSizeY, gameSpeed, gamePoint);
-            gameTimer.Interval = 1000 / snakeSettings.gameSpeed;
-            gameTimer.Tick += UpdateScreen;
+            worldController = new WorldController(gameSizeX, gameSizeY, gameSpeed, gamePoint);
+            gameTimer.Interval = 1000 / worldController.gameSpeed;
+            gameTimer.Tick += Render;
             gameTimer.Start();
-
+            selfBrain = new SelfBrain();
             StartGame();
         }
 
         private void StartGame()
         {
-            snakeSettings.Clear();
-            lblScore.Text = snakeSettings.currentScore.ToString();
+            worldController.Clear();
+            lblScore.Text = worldController.currentScore.ToString();
             lblGameOver.Visible = false;
         }
 
-        private void UpdateScreen(object sender, EventArgs e)
+        private void Render(object sender, EventArgs e)
         {
-            if (snakeSettings.isGameOver)
+            if (worldController.isGameOver)
             {
-                if (SnakeInput.KeyPressed(Keys.Enter))
-                {
-                    StartGame();
-                }
+                StartGame();
             }
             else
             {
+#if player
                 if (SnakeInput.KeyPressed(Keys.Right) && snakeSettings.headDirection != SnakeDirection.LEFT)
                     snakeSettings.headDirection = SnakeDirection.RIGHT;
                 else if (SnakeInput.KeyPressed(Keys.Left) && snakeSettings.headDirection != SnakeDirection.RIGHT)
@@ -52,18 +52,21 @@ namespace SnakeNN
                     snakeSettings.headDirection = SnakeDirection.DOWN;
                 else
                     snakeSettings.headDirection = SnakeDirection.NULL;
-
-                snakeSettings.UpdateWorld();
-                SnakeInput.ClearTable();
+#else 
+                selfBrain.feed(worldController.self.x, worldController.self.y, worldController.target.x, worldController.target.y);
+                worldController.headDirection = selfBrain.decide();
+#endif
             }
 
+            worldController.UpdateWorld();
+            InputController.ClearTable();
             pbCanvas.Invalidate();
 
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
-            SnakeInput.ChangeState(e.KeyCode, true);
+            InputController.ChangeState(e.KeyCode, true);
         }
 
         private void pbCanvas_Paint(object sender, PaintEventArgs e)
@@ -71,17 +74,17 @@ namespace SnakeNN
             Graphics canvas = e.Graphics;
 
             // Update all texts
-            lblScore.Text = snakeSettings.currentScore.ToString();
+            lblScore.Text = worldController.currentScore.ToString();
 
-            int ellipseSizeX = (pbCanvas.Width / snakeSettings.gameGridX);
-            int ellipseSizeY = (pbCanvas.Height / snakeSettings.gameGridY);
-            if (!snakeSettings.isGameOver)
+            int ellipseSizeX = (pbCanvas.Width / worldController.gameGridX);
+            int ellipseSizeY = (pbCanvas.Height / worldController.gameGridY);
+            if (!worldController.isGameOver)
             {
-                for (int iterateY = 0; iterateY < snakeSettings.snakeCartesian.GetLength(0); iterateY++)
+                for (int iterateY = 0; iterateY < worldController.worldGrid.GetLength(0); iterateY++)
                 {
-                    for (int iterateX = 0; iterateX < snakeSettings.snakeCartesian.GetLength(1); iterateX++)
+                    for (int iterateX = 0; iterateX < worldController.worldGrid.GetLength(1); iterateX++)
                     {
-                        canvas.FillEllipse(snakeSettings.GetColorOfObject(snakeSettings.snakeCartesian.GetWorld()[iterateX, iterateY]),
+                        canvas.FillEllipse(worldController.GetColorOfObject(worldController.worldGrid.GetWorld()[iterateX, iterateY]),
                             new Rectangle(iterateX * ellipseSizeX, iterateY * ellipseSizeY,
                                           ellipseSizeX, ellipseSizeY));
                     }
@@ -89,9 +92,9 @@ namespace SnakeNN
             }
             else
             {
-                string gameOverText = "Game over \n" + snakeSettings.currentScore;
+                string gameOverText = "Game over \n" + worldController.currentScore;
                 //lblGameOver.Text = gameOverText;
-                lblGameOver.Visible = snakeSettings.isGameOver;
+                //lblGameOver.Visible = snakeSettings.isGameOver;
             }
         }
 

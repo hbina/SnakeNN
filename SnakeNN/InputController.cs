@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Windows.Forms;
 
-public class SnakeInput
+public class InputController
 {
     //Load list of available Keyboard buttons
     private static Hashtable keyTable = new Hashtable();

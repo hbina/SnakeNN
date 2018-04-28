@@ -1,10 +1,10 @@
-﻿public class Circle
+﻿public class WorldObject
 {
     public int x { get; set; }
     public int y { get; set; }
-    public CartesianStates type { get; set; }
+    public WorldStates type { get; set; }
 
-    public Circle(int givenX, int givenY, CartesianStates givenType)
+    public WorldObject(int givenX, int givenY, WorldStates givenType)
     {
         x = givenX;
         y = givenY;
