@@ -2,16 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 
-public enum SnakeDirection
-{
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-    NULL
-};
-
-public enum WorldStates
+public enum WorldState
 {
     IS_EMPTY,
     IS_SNAKE,
@@ -23,53 +14,51 @@ public enum WorldStates
 public class WorldController
 {
 
-    public readonly int gameGridX;
-    public readonly int gameGridY;
-    public readonly int gameSpeed;
+    public readonly int GameGridX;
+    public readonly int GameGridY;
+    public readonly int GameSpeed;
     public readonly int gameEatPoints;
 
-    public int currentScore;
-    public bool isGameOver;
-    public SnakeDirection headDirection;
+    private int CurrentScore;
+    private bool IsGameOver;
 
-    public WorldGrid worldGrid;
-    public WorldObject self;
-    public WorldObject target;
-    public List<WorldObject> selfVision;
+    private WorldGrid WorldGrid;
+    public WorldObject Self;
+    public WorldObject Target;
+    private List<WorldObject> SelfVision;
 
-    private Random random;
+    private Random RNG;
     private readonly int RANDOM_NUMBER = 181983123;
 
-    public WorldController(int givenGridX, int givenGridY, int givenSpeed, int givenEatPoints)
+    public WorldController(int GivenGridX, int GivenGridY, int GivenSpeed, int GivenEatPoints)
     {
-        random = new Random(RANDOM_NUMBER);
-        gameGridX = givenGridX;
-        gameGridY = givenGridY;
-        gameSpeed = givenSpeed;
-        gameEatPoints = givenEatPoints;
+        RNG = new Random(RANDOM_NUMBER);
+        GameGridX = GivenGridX;
+        GameGridY = GivenGridY;
+        GameSpeed = GivenSpeed;
+        gameEatPoints = GivenEatPoints;
         Clear();
     }
 
     public void Clear()
     {
-        currentScore = 0;
-        isGameOver = false;
-        headDirection = SnakeDirection.UP;
-        worldGrid = new WorldGrid(gameGridX, gameGridY);
-        self = new WorldObject(gameGridX / 2, gameGridY / 2, WorldStates.IS_SNAKE);
-        target = new WorldObject(0, 0, WorldStates.IS_FOOD);
-        selfVision = new List<WorldObject>();
+        CurrentScore = 0;
+        IsGameOver = false;
+        WorldGrid = new WorldGrid(GameGridX, GameGridY);
+        Self = new WorldObject(GameGridX / 2, GameGridY / 2, WorldState.IS_SNAKE, ObjectDirection.UP);
+        Target = new WorldObject(0, 0, WorldState.IS_FOOD);
+        SelfVision = new List<WorldObject>();
         GenerateFood();
     }
 
     public void GenerateFood()
     {
-        int x = random.Next(1, gameGridX);
-        int y = random.Next(1, gameGridY);
+        int x = RNG.Next(1, GameGridX);
+        int y = RNG.Next(1, GameGridY);
         Console.WriteLine($"food({x}, {y})");
-        if (worldGrid.GetWorld()[x, y].Equals(WorldStates.IS_EMPTY))
+        if (WorldGrid.GetStateAt(x, y).Equals(WorldState.IS_EMPTY))
         {
-            target = new WorldObject(x, y, WorldStates.IS_FOOD);
+            Target = new WorldObject(x, y, WorldState.IS_FOOD);
         }
         else
         {
@@ -79,72 +68,72 @@ public class WorldController
 
     public void Eat()
     {
-        currentScore += gameEatPoints;
+        CurrentScore += gameEatPoints;
         GenerateFood();
     }
 
     public void UpdateWorld()
     {
-        switch (headDirection)
+        switch (Self.Direction)
         {
-            case SnakeDirection.RIGHT:
-                self.x++;
+            case ObjectDirection.RIGHT:
+                Self.X++;
                 break;
-            case SnakeDirection.LEFT:
-                self.x--;
+            case ObjectDirection.LEFT:
+                Self.X--;
                 break;
-            case SnakeDirection.UP:
-                self.y--;
+            case ObjectDirection.UP:
+                Self.Y--;
                 break;
-            case SnakeDirection.DOWN:
-                self.y++;
+            case ObjectDirection.DOWN:
+                Self.Y++;
                 break;
         }
 
-        if (worldGrid.GetWorld()[self.x, self.y].Equals(WorldStates.IS_WALL))
+        if (WorldGrid.GetStateAt(Self.X, Self.Y).Equals(WorldState.IS_WALL))
         {
             Die();
         }
-        else if (worldGrid.GetWorld()[self.x, self.y].Equals(WorldStates.IS_FOOD))
+        else if (WorldGrid.GetStateAt(Self.X, Self.Y).Equals(WorldState.IS_FOOD))
         {
             Eat();
         }
 
         //UpdateVision();
         List<WorldObject> worldObjects = new List<WorldObject>();
-        worldObjects.Add(self);
-        worldObjects.Add(target);
-        foreach (WorldObject circle in selfVision)
+        worldObjects.Add(Self);
+        worldObjects.Add(Target);
+        foreach (WorldObject circle in SelfVision)
         {
             worldObjects.Add(circle);
         }
-        worldGrid.UpdateCartesian(worldObjects);
+        WorldGrid.UpdateCartesian(worldObjects);
     }
 
     private void Die()
     {
-        isGameOver = true;
+        IsGameOver = true;
     }
 
-    public Brush GetColorOfObject(WorldStates givenCartesianState)
+    public Brush GetColorOfObject(WorldState givenCartesianState)
     {
-        if (givenCartesianState.Equals(WorldStates.IS_EMPTY))
+        if (givenCartesianState.Equals(WorldState.IS_EMPTY))
         {
             return Brushes.Pink;
         }
-        else if (givenCartesianState.Equals(WorldStates.IS_SNAKE))
+        else if (givenCartesianState.Equals(WorldState.IS_SNAKE))
         {
             return Brushes.Blue;
         }
-        else if (givenCartesianState.Equals(WorldStates.IS_FOOD))
+        else if (givenCartesianState.Equals(WorldState.IS_FOOD))
         {
             return Brushes.Green;
         }
-        else if (givenCartesianState.Equals(WorldStates.IS_LIGHT))
+        else if (givenCartesianState.Equals(WorldState.IS_LIGHT))
         {
             return Brushes.White;
         }
-        else if (givenCartesianState.Equals(WorldStates.IS_WALL))
+        else if (givenCartesianState.Equals(WorldState.IS_WALL))
         {
             return Brushes.Black;
         }
@@ -156,71 +145,71 @@ public class WorldController
 
     public void UpdateVision()
     {
-        selfVision = new List<WorldObject>();
-        int[] lightPosition = new int[] { self.x, self.y };
-        if (headDirection.Equals(SnakeDirection.UP))
+        SelfVision = new List<WorldObject>();
+        int[] lightPosition = new int[] { Self.X, Self.Y };
+        if (Self.Direction.Equals(ObjectDirection.UP))
         {
             int counter = 0;
             while (lightPosition[1] >= 0)
             {
-                selfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldStates.IS_LIGHT));
+                SelfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldState.IS_LIGHT));
                 for (int sideLength = 0; sideLength < counter; sideLength++)
                 {
                     int checkedLeft = lightPosition[0] - sideLength;
                     int checkedRight = lightPosition[0] + sideLength;
                     if (checkedLeft >= 0)
                     {
-                        selfVision.Add(new WorldObject(checkedLeft, lightPosition[1], WorldStates.IS_LIGHT));
+                        SelfVision.Add(new WorldObject(checkedLeft, lightPosition[1], WorldState.IS_LIGHT));
                     }
-                    if (checkedRight < worldGrid.GetWorld().GetLength(0))
+                    if (checkedRight < WorldGrid.GetLength(0))
                     {
-                        selfVision.Add(new WorldObject(checkedRight, lightPosition[1], WorldStates.IS_LIGHT));
+                        SelfVision.Add(new WorldObject(checkedRight, lightPosition[1], WorldState.IS_LIGHT));
                     }
                 }
                 lightPosition[1]--;
                 counter++;
             }
         }
-        else if (headDirection.Equals(SnakeDirection.DOWN))
+        else if (Self.Direction.Equals(ObjectDirection.DOWN))
         {
             int counter = 0;
-            while (lightPosition[1] < worldGrid.GetWorld().GetLength(1))
+            while (lightPosition[1] < WorldGrid.GetLength(1))
             {
-                selfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldStates.IS_LIGHT));
+                SelfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldState.IS_LIGHT));
                 for (int sideLength = 0; sideLength < counter; sideLength++)
                 {
                     int checkedLeft = lightPosition[0] - sideLength;
                     int checkedRight = lightPosition[0] + sideLength;
                     if (checkedLeft >= 0)
                     {
-                        selfVision.Add(new WorldObject(checkedLeft, lightPosition[1], WorldStates.IS_LIGHT));
+                        SelfVision.Add(new WorldObject(checkedLeft, lightPosition[1], WorldState.IS_LIGHT));
                     }
-                    if (checkedRight < worldGrid.GetWorld().GetLength(0))
+                    if (checkedRight < WorldGrid.GetLength(0))
                     {
-                        selfVision.Add(new WorldObject(checkedRight, lightPosition[1], WorldStates.IS_LIGHT));
+                        SelfVision.Add(new WorldObject(checkedRight, lightPosition[1], WorldState.IS_LIGHT));
                     }
                 }
                 lightPosition[1]++;
                 counter++;
             }
         }
-        else if (headDirection.Equals(SnakeDirection.LEFT))
+        else if (Self.Direction.Equals(ObjectDirection.LEFT))
         {
             int counter = 0;
             while (lightPosition[0] >= 0)
             {
-                selfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldStates.IS_LIGHT));
+                SelfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldState.IS_LIGHT));
                 for (int sideLength = 0; sideLength < counter; sideLength++)
                 {
                     int checkedUp = lightPosition[1] - sideLength;
                     int checkDown = lightPosition[1] + sideLength;
                     if (checkedUp >= 0)
                     {
-                        selfVision.Add(new WorldObject(checkedUp, lightPosition[1], WorldStates.IS_LIGHT));
+                        SelfVision.Add(new WorldObject(checkedUp, lightPosition[1], WorldState.IS_LIGHT));
                     }
-                    if (checkDown < worldGrid.GetWorld().GetLength(1))
+                    if (checkDown < WorldGrid.GetLength(1))
                     {
-                        selfVision.Add(new WorldObject(checkDown, lightPosition[1], WorldStates.IS_LIGHT));
+                        SelfVision.Add(new WorldObject(checkDown, lightPosition[1], WorldState.IS_LIGHT));
                     }
                 }
                 lightPosition[1]--;
@@ -230,26 +219,46 @@ public class WorldController
         else
         {
             int counter = 0;
-            while (lightPosition[1] < worldGrid.GetWorld().GetLength(0))
+            while (lightPosition[1] < WorldGrid.GetLength(0))
             {
-                selfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldStates.IS_LIGHT));
+                SelfVision.Add(new WorldObject(lightPosition[0], lightPosition[1], WorldState.IS_LIGHT));
                 for (int sideLength = 0; sideLength < counter; sideLength++)
                 {
                     int checkedUp = lightPosition[0] - sideLength;
                     int checkedDown = lightPosition[0] + sideLength;
                     if (checkedUp >= 0)
                     {
-                        selfVision.Add(new WorldObject(checkedUp, lightPosition[1], WorldStates.IS_LIGHT));
+                        SelfVision.Add(new WorldObject(checkedUp, lightPosition[1], WorldState.IS_LIGHT));
                     }
-                    if (checkedDown < worldGrid.GetWorld().GetLength(1))
+                    if (checkedDown < WorldGrid.GetLength(1))
                     {
-                        selfVision.Add(new WorldObject(checkedDown, lightPosition[1], WorldStates.IS_LIGHT));
+                        SelfVision.Add(new WorldObject(checkedDown, lightPosition[1], WorldState.IS_LIGHT));
                     }
                 }
                 lightPosition[1]--;
                 counter++;
             }
         }
+    }
+
+    public int GetCurrentScore()
+    {
+        return CurrentScore;
+    }
+
+    public Boolean GetIsGameOver()
+    {
+        return IsGameOver;
+    }
+
+    public int GetGameSpeed()
+    {
+        return GameSpeed;
+    }
+
+    public WorldGrid GetWorldGrid()
+    {
+        return WorldGrid;
     }
 }
 

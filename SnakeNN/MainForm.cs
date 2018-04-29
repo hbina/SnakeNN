@@ -19,7 +19,7 @@ namespace SnakeNN
         {
             InitializeComponent();
             worldController = new WorldController(gameSizeX, gameSizeY, gameSpeed, gamePoint);
-            gameTimer.Interval = 1000 / worldController.gameSpeed;
+            gameTimer.Interval = 1000 / worldController.GetGameSpeed();
             gameTimer.Tick += Render;
             gameTimer.Start();
             selfBrain = new SelfBrain();
@@ -29,13 +29,13 @@ namespace SnakeNN
         private void StartGame()
         {
             worldController.Clear();
-            lblScore.Text = worldController.currentScore.ToString();
+            lblScore.Text = worldController.GetCurrentScore().ToString();
             lblGameOver.Visible = false;
         }
 
         private void Render(object sender, EventArgs e)
         {
-            if (worldController.isGameOver)
+            if (worldController.GetIsGameOver())
             {
                 StartGame();
             }
@@ -53,8 +53,8 @@ namespace SnakeNN
                 else
                     snakeSettings.headDirection = SnakeDirection.NULL;
 #else 
-                selfBrain.feed(worldController.self.x, worldController.self.y, worldController.target.x, worldController.target.y);
-                worldController.headDirection = selfBrain.decide();
+                selfBrain.feed(worldController.Self.X, worldController.Self.Y, worldController.Target.X, worldController.Target.Y);
+                worldController.Self.Direction = selfBrain.decide();
 #endif
             }
 
@@ -74,17 +74,17 @@ namespace SnakeNN
             Graphics canvas = e.Graphics;
 
             // Update all texts
-            lblScore.Text = worldController.currentScore.ToString();
+            lblScore.Text = worldController.GetCurrentScore().ToString();
 
-            int ellipseSizeX = (pbCanvas.Width / worldController.gameGridX);
-            int ellipseSizeY = (pbCanvas.Height / worldController.gameGridY);
-            if (!worldController.isGameOver)
+            int ellipseSizeX = (pbCanvas.Width / worldController.GameGridX);
+            int ellipseSizeY = (pbCanvas.Height / worldController.GameGridY);
+            if (!worldController.GetIsGameOver())
             {
-                for (int iterateY = 0; iterateY < worldController.worldGrid.GetLength(0); iterateY++)
+                for (int iterateY = 0; iterateY < worldController.GetWorldGrid().GetLength(0); iterateY++)
                 {
-                    for (int iterateX = 0; iterateX < worldController.worldGrid.GetLength(1); iterateX++)
+                    for (int iterateX = 0; iterateX < worldController.GetWorldGrid().GetLength(1); iterateX++)
                     {
-                        canvas.FillEllipse(worldController.GetColorOfObject(worldController.worldGrid.GetWorld()[iterateX, iterateY]),
+                        canvas.FillEllipse(worldController.GetColorOfObject(worldController.GetWorldGrid().GetStateAt(iterateX, iterateY)),
                             new Rectangle(iterateX * ellipseSizeX, iterateY * ellipseSizeY,
                                           ellipseSizeX, ellipseSizeY));
                     }
@@ -92,7 +92,7 @@ namespace SnakeNN
             }
             else
             {
-                string gameOverText = "Game over \n" + worldController.currentScore;
+                string gameOverText = "Game over \n" + worldController.GetCurrentScore();
                 //lblGameOver.Text = gameOverText;
                 //lblGameOver.Visible = snakeSettings.isGameOver;
             }

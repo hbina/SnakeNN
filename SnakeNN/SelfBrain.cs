@@ -19,22 +19,25 @@ public class SelfBrain
         targetY = targetPositionY;
     }
 
-    public SnakeDirection decide()
+    public ObjectDirection decide()
     {
         int distanceX = Math.Abs(selfX - targetX);
         int distanceY = Math.Abs(selfY - targetY);
         if (selfX < targetX)
         {
-            return SnakeDirection.RIGHT;
-        } else if (selfX > targetX)
+            return ObjectDirection.RIGHT;
+        }
+        else if (selfX > targetX)
         {
-            return SnakeDirection.LEFT;
-        } else if (selfY < targetY)
+            return ObjectDirection.LEFT;
+        }
+        else if (selfY < targetY)
         {
-            return SnakeDirection.DOWN;
-        } else
+            return ObjectDirection.DOWN;
+        }
+        else
         {
-            return SnakeDirection.UP;
+            return ObjectDirection.UP;
         }
     }
 }
